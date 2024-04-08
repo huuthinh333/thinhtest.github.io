@@ -1,0 +1,224 @@
+{
+  "_id": {
+    "$oid": "65143e5597c5a25f63eb494b"
+  },
+  "public": {
+    "input": {
+      "jsonSchema": {
+        "title": "Thông tin sản phẩm",
+        "type": "object",
+        "required": [
+          "productType",
+          "StartPrice",
+          "EndPrice"
+        ],
+        "properties": {
+          "productType": {
+            "type": "string",
+            "title": "Loại sản phẩm",
+            "enum": [
+              "Phôi thẻ trắng",
+              "Thẻ bảo lãnh",
+              "Thẻ bệnh viện",
+              "Thẻ dán NFC",
+              "Thẻ danh thiếp"
+            ]
+          },
+          "StartPrice": {
+            "title": "Giá từ",
+            "type": "number",
+            "enum": [
+              {
+                "$numberLong": "10"
+              },
+              {
+                "$numberLong": "20"
+              },
+              {
+                "$numberLong": "30"
+              },
+              {
+                "$numberLong": "40"
+              },
+              {
+                "$numberLong": "50"
+              },
+              {
+                "$numberLong": "60"
+              }
+            ]
+          },
+          "EndPrice": {
+            "title": "Tới",
+            "type": "number",
+            "enum": [
+              {
+                "$numberLong": "60"
+              },
+              {
+                "$numberLong": "70"
+              },
+              {
+                "$numberLong": "80"
+              },
+              {
+                "$numberLong": "90"
+              },
+              {
+                "$numberLong": "100"
+              }
+            ]
+          }
+        }
+      },
+      "uiSchema": {
+        "ui:classNames": "my-form",
+        "products": {
+          "ui:options": {
+            "orderable": false
+          }
+        },
+        "ui:submitButtonOptions": {
+          "props": {
+            "className": ""
+          },
+          "submitText": "Nhập sản phẩm"
+        }
+      },
+      "jsonData": {},
+      "jsonInfo": {
+        "Name": "Cart_Module",
+        "author": "Đỗ Đồng",
+        "ver": "2024-3-10"
+      },
+      "jsonPath": {
+        "col": "Null",
+        "db": "Null"
+      }
+    },
+    "output": {
+      "jsonSchema": {},
+      "jsonData": {},
+      "jsonInfo": {
+        "author": "Đỗ Đồng",
+        "ver": "2024-3-10"
+      },
+      "jsonPath": {
+        "db": "Null",
+        "coll": "Null"
+      }
+    },
+    "info": {
+      "name": "Cart_Module"
+    }
+  },
+  "private": {
+    "processing": [
+      {
+        "$match": {
+          "public.info.name": "Cart_Module"
+        }
+      },
+      {
+        "$lookup": {
+          "from": "user",
+          "localField": "public.info.name",
+          "foreignField": "Module",
+          "as": "public.input.jsonData.user"
+        }
+      },
+      {
+        "$lookup": {
+          "from": "products",
+          "localField": "id",
+          "foreignField": "id",
+          "as": "public.input.jsonData.products"
+        }
+      },
+      {
+        "$addFields": {
+          "public.input.jsonData.option": {
+            "$arrayElemAt": [
+              "$public.input.jsonData.user.option",
+              0
+            ]
+          },
+          "public.input.jsonData.cart": {
+            "$arrayElemAt": [
+              "$public.input.jsonData.user.cart",
+              0
+            ]
+          },
+          "public.input.jsonData.identify": {
+            "$arrayElemAt": [
+              "$public.input.jsonData.user.userData.email",
+              0
+            ]
+          }
+        }
+      },
+      {
+        "$unset": "public.input.jsonData.user"
+      },
+      {
+        "$addFields": {
+          "public.output.jsonData.products": {
+            "$filter": {
+              "input": "$public.input.jsonData.products",
+              "as": "item",
+              "cond": {
+                "$and": [
+                  {
+                    "$gte": [
+                      "$$item.sellingPrice",
+                      "$public.input.jsonData.option.StartPrice"
+                    ]
+                  },
+                  {
+                    "$lte": [
+                      "$$item.sellingPrice",
+                      "$public.input.jsonData.option.EndPrice"
+                    ]
+                  },
+                  {
+                    "$eq": [
+                      "$$item.productType",
+                      "$public.input.jsonData.option.productType"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "public.output.jsonData.TotalPrice": {
+            "$reduce": {
+              "input": "$public.input.jsonData.cart",
+              "initialValue": 0,
+              "in": {
+                "$add": [
+                  "$$value",
+                  {
+                    "$multiply": [
+                      "$$this.quantity",
+                      "$$this.sellingPrice"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "$project": {
+          "public": 1,
+          "personal": 1
+        }
+      }
+    ]
+  },
+  "personal": {
+    "summary": "Thông tin thêm",
+    "noted1": "JSON Schema Cart ver 1.0"
+  }
+}

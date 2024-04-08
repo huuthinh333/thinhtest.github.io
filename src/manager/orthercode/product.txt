@@ -1,0 +1,47 @@
+import React,{useState,useEffect} from 'react'
+import * as Realm from 'realm-web'
+import Form from '@rjsf/core';
+import validator from '@rjsf/validator-ajv8';
+const schema = {
+  type: 'object',
+  properties: {
+    products: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+      
+         
+          productName: { type: 'string' },
+          productType: { type: 'string' },
+         
+          quantity: { type: 'number' },
+          sellingPrice: { type: 'number' },
+    
+        }
+      }
+    }
+  }
+};
+const AllProduct = () => {
+  const app= new Realm.App({id:process.env.REACT_APP_KEY})
+  const [products,setProducts]=useState([])
+  useEffect(()=>{
+      fetchData();
+  },[])
+  const fetchData = async()=>{
+    const FunctionName='getAllProducts'
+    const result= await app.currentUser.callFunction(FunctionName)
+    setProducts(result)
+    console.log(result)
+  }
+  const formData = {products}
+  return (
+    <div>
+      <h1>Product Form</h1>
+      <Form schema={schema}  formData={formData} validator={validator}/>
+    </div>
+  )
+}
+
+export default AllProduct

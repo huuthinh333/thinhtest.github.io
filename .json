@@ -1,0 +1,243 @@
+{
+    "_id": {
+      "$oid": "65f447f1c8f1b8ab1d59c96a"
+    },
+    "public": {
+      "input": {
+        "jsonSchema": {
+          "type": "object",
+          "required": [
+            "year",
+            "month",
+            "week",
+            "startDay",
+            "endDate"
+          ],
+          "properties": {
+            "year": {
+              "type": "number",
+              "title": "Năm",
+              "enum": [
+                2023,
+                2024
+              ],
+              "default": 2024
+            },
+            "month": {
+              "type": "number",
+              "title": "Tháng",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            },
+            "week": {
+              "type": "number",
+              "title": "Tuần thứ",
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ]
+            },
+            "startDay": {
+              "type": "number",
+              "title": "Ngày bắt đầu của tuần",
+              "default": 1,
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            },
+            "endDate": {
+              "type": "number",
+              "title": "Ngày kết thúc của tuần",
+              "default": 7,
+              "enum": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ]
+            }
+          }
+        },
+        "uiSchema": {},
+        "jsonData": {},
+        "jsonInfo": {
+          "Name": "Bill_Module",
+          "author": "Đỗ Đồng",
+          "ver": "2024-3-10"
+        },
+        "jsonPath": {
+          "col": "Null",
+          "db": "Null"
+        }
+      },
+      "output": {
+        "jsonSchema": {},
+        "jsonData": {},
+        "jsonInfo": {
+          "author": "Đỗ Đồng",
+          "ver": "2024-3-10"
+        },
+        "jsonPath": {
+          "db": "Null",
+          "coll": "Null"
+        },
+        "uiSchema": {}
+      },
+      "info": {
+        "name": "Bill_Module"
+      }
+    },
+    "private": {
+      "processing": [
+        {
+          "$match": {
+            "public.info.name": "Bill_Module"
+          }
+        },
+        {
+          "$lookup": {
+            "from": "cart",
+            "localField": "public.info.name",
+            "foreignField": "Module",
+            "as": "public.input.jsonData.product"
+          }
+        },
+        {
+          "$lookup": {
+            "from": "user",
+            "localField": "public.info.name",
+            "foreignField": "Module",
+            "as": "public.input.jsonData.user"
+          }
+        },
+        {
+          "$addFields": {
+            "public.input.jsonData.option": {
+              "$arrayElemAt": [
+                "$public.input.jsonData.user.option",
+                0
+              ]
+            },
+            "public.input.jsonData.identify": {
+              "$arrayElemAt": [
+                "$public.input.jsonData.user.userData.email",
+                0
+              ]
+            }
+          }
+        },
+        {
+          "$unset": "public.input.jsonData.user"
+        },
+        {
+          "$addFields": {
+            "public.input.jsonData.dayStart": {
+              "$subtract": [
+                {
+                  "$multiply": [
+                    7,
+                    "$public.input.jsonData.option.week"
+                  ]
+                },
+                {
+                  "$subtract": [
+                    7,
+                    "$public.input.jsonData.option.startDay"
+                  ]
+                }
+              ]
+            },
+            "public.input.jsonData.dayEnd": {
+              "$add": [
+                {
+                  "$multiply": [
+                    7,
+                    "$public.input.jsonData.option.week"
+                  ]
+                },
+                {
+                  "$subtract": [
+                    "$public.input.jsonData.option.endDate",
+                    7
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$addFields": {
+            "public.output.jsonData.product": {
+              "$filter": {
+                "input": "$public.input.jsonData.product",
+                "as": "bill",
+                "cond": {
+                  "$and": [
+                    {
+                      "$gte": [
+                        "$$bill.date.day",
+                        "$public.input.jsonData.dayStart"
+                      ]
+                    },
+                    {
+                      "$lte": [
+                        "$$bill.date.day",
+                        "$public.input.jsonData.dayEnd"
+                      ]
+                    },
+                    {
+                      "$eq": [
+                        "$$bill.date.year",
+                        "$public.input.jsonData.option.year"
+                      ]
+                    },
+                    {
+                      "$eq": [
+                        "$$bill.date.month",
+                        "$public.input.jsonData.option.month"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+            "$project":{
+                "public":1,
+                "personal":1
+            }
+        }
+      ]
+    },
+    "personal": {
+      "noted1": "JSON Schema Bill ver 1.0",
+      "summary": "Thông tin thêm"
+    }
+  }
+  

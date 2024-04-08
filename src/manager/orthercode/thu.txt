@@ -1,0 +1,71 @@
+import React, { useEffect, useState } from 'react';
+import BillForm from './page/BillForm/BillForm';
+import AllProduct from './page/AllProduct/AllProduct';
+import UserManager from './page/User/userManager';
+import * as Realm from 'realm-web';
+import { useNavigate } from 'react-router-dom';
+
+const ManagerHome = () => {
+  const app = new Realm.App({ id: process.env.REACT_APP_KEY });
+  const navigate = useNavigate();
+  const [activeComponent, setActiveComponent] = useState('UserManager');
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      if (!app?.currentUser?.accessToken) {
+        navigate('/managerofinan/login');
+      } else {
+        await app?.currentUser?.refreshAccessToken();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'ArrowLeft') {
+      switch (activeComponent) {
+        case 'AllProduct':
+          setActiveComponent('UserManager');
+          break;
+        case 'BillForm':
+          setActiveComponent('AllProduct');
+          break;
+        default:
+          break;
+      }
+    } else if (event.key === 'ArrowRight') {
+      switch (activeComponent) {
+        case 'UserManager':
+          setActiveComponent('AllProduct');
+          break;
+        case 'AllProduct':
+          setActiveComponent('BillForm');
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeComponent]);
+
+  return (
+    <div>
+      {activeComponent === 'UserManager' && <UserManager />}
+      {activeComponent === 'AllProduct' && <AllProduct />}
+      {activeComponent === 'BillForm' && <BillForm />}
+    </div>
+  );
+};
+
+export default ManagerHome;

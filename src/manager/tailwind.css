@@ -1,0 +1,32 @@
+.transition-all {
+    transition-property: all;
+    transition-duration: 300ms; /* Thời gian của transition (300ms = 0.3s) */
+    transition-timing-function: ease-in-out; /* Hàm timing của transition */
+  }
+  
+  /* Add custom animations */
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes fadeOut {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  
+  .fade-enter {
+    animation: fadeIn 300ms ease-in-out;
+  }
+  
+  .fade-exit {
+    animation: fadeOut 300ms ease-in-out;
+  }
